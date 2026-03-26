@@ -127,7 +127,8 @@
 <script>
 const PASSWORD = "Finance2026#";
 const API = "https://api.monday.com/v2";
-let apiKey = "", allBoards = [], selectedBoard = null, allItems = [], colMap = {};
+const HARDCODED_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjYzNzk3MDc3NiwiYWFpIjoxMSwidWlkIjo4MjE5MjA1NSwiaWFkIjoiMjAyNi0wMy0yNlQwNToxNDo1OC4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MjA4NDc4NzMsInJnbiI6InVzZTEifQ.CS03TF2Y7J73cNIhYpzBU9m3tfeRZyHUn2f9CsG3ZuE";
+let apiKey = HARDCODED_TOKEN, allBoards = [], selectedBoard = null, allItems = [], colMap = {};
 
 // Password check — always shown first
 document.getElementById("pwInput").addEventListener("keydown", e => { if (e.key === "Enter") checkPw(); });
@@ -136,8 +137,7 @@ function checkPw() {
   if (document.getElementById("pwInput").value === PASSWORD) {
     document.getElementById("pw-screen").style.display = "none";
     document.getElementById("app").style.display = "block";
-    const saved = localStorage.getItem("monday_api_key");
-    if (saved) { apiKey = saved; connectMonday(); }
+    connectMonday(); // Always use hardcoded token
   } else {
     document.getElementById("pwError").style.display = "";
   }
