@@ -7,47 +7,66 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Inter, sans-serif; background: #f5f5fb; color: #1a1a2e; min-height: 100vh; display: flex; justify-content: center; padding: 32px 16px; }
-  .card { background: #fff; border-radius: 14px; padding: 32px; width: 100%; max-width: 760px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); height: fit-content; }
+  :root {
+    --yellow: #EFB14D;
+    --black: #000000;
+    --brown: #9d9488;
+    --offwhite: #F4F1ED;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, sans-serif; background: var(--offwhite); color: var(--black); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px 16px; gap: 0; }
+  .card { background: #fff; border-radius: 4px; padding: 32px; width: 100%; max-width: 760px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-top: 4px solid var(--yellow); height: fit-content; }
   h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-  .sub { font-size: 13px; color: #666; margin-bottom: 24px; }
+  .sub { font-size: 13px; color: var(--brown); margin-bottom: 24px; }
   label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; }
-  input[type=password], input[type=text] { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-bottom: 14px; outline: none; }
-  input:focus { border-color: #6c63ff; }
-  button { border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .btn-primary { background: #6c63ff; color: #fff; }
+  input[type=password], input[type=text] { width: 100%; padding: 10px 12px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; margin-bottom: 14px; outline: none; }
+  input:focus { border-color: var(--yellow); }
+  button { border: none; border-radius: 4px; padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-primary { background: var(--black); color: #fff; }
   .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-  .btn-green { background: #00c875; color: #fff; }
-  .btn-back { background: #f0f0f0; color: #333; }
-  .error { background: #fff0f0; border: 1px solid #ffc5c5; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; color: #c62828; font-size: 13px; }
-  .info { background: #f0f7ff; border: 1px solid #c8e0ff; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #1560bd; }
-  .success { background: #f0fff8; border: 1px solid #b2f0d4; border-radius: 12px; padding: 40px; text-align: center; }
+  .btn-green { background: var(--yellow); color: var(--black); }
+  .btn-back { background: var(--offwhite); color: var(--black); border: 1px solid #ccc; }
+  .error { background: #fff0f0; border: 1px solid #ffc5c5; border-radius: 4px; padding: 10px 14px; margin-bottom: 16px; color: #c62828; font-size: 13px; }
+  .info { background: #fdf6e7; border: 1px solid var(--yellow); border-radius: 4px; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #7a5c00; }
+  .success { background: #fdf6e7; border: 1px solid var(--yellow); border-radius: 4px; padding: 40px; text-align: center; }
   .board-list { max-height: 380px; overflow-y: auto; display: grid; gap: 8px; margin-top: 10px; }
-  .board-item { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 13px 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: border-color 0.15s; }
-  .board-item:hover { border-color: #6c63ff; }
+  .board-item { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 13px 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: border-color 0.15s; }
+  .board-item:hover { border-color: var(--yellow); background: #fdf6e7; }
   .board-name { font-weight: 600; font-size: 14px; }
-  .board-count { font-size: 12px; color: #aaa; }
+  .board-count { font-size: 12px; color: var(--brown); }
   .steps { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 24px; }
   .step-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #fff; }
-  .step-done { background: #00c875; }
-  .step-active { background: #6c63ff; }
-  .step-idle { background: #d0d0d0; }
-  .step-label { font-weight: 400; color: #aaa; }
-  .step-label.active { font-weight: 600; color: #6c63ff; }
-  .step-label.done { color: #00875a; }
+  .step-done { background: var(--yellow); }
+  .step-active { background: var(--black); }
+  .step-idle { background: var(--brown); opacity: 0.4; }
+  .step-label { font-weight: 400; color: var(--brown); }
+  .step-label.active { font-weight: 600; color: var(--black); }
+  .step-label.done { color: var(--yellow); filter: brightness(0.8); }
   table { border-collapse: collapse; width: 100%; font-size: 12px; }
-  th { padding: 9px 12px; text-align: left; font-weight: 700; white-space: nowrap; color: #444; border-bottom: 2px solid #e0e0e0; background: #f4f4f8; }
+  th { padding: 9px 12px; text-align: left; font-weight: 700; white-space: nowrap; color: #fff; border-bottom: 2px solid var(--yellow); background: var(--black); }
   td { padding: 8px 12px; white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; border-top: 1px solid #f0f0f0; }
-  tr:nth-child(even) { background: #fafafa; }
-  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #e0e0e0; margin-bottom: 20px; }
+  tr:nth-child(even) { background: var(--offwhite); }
+  .table-wrap { overflow-x: auto; border-radius: 4px; border: 1px solid #e0e0e0; margin-bottom: 20px; }
   .actions { display: flex; gap: 10px; }
-  .loading { text-align: center; color: #6c63ff; font-size: 13px; padding: 20px; }
+  .loading { text-align: center; color: var(--brown); font-size: 13px; padding: 20px; }
 </style>
 </head>
 <body>
+<!-- Password Screen -->
+<div id="step-password" class="card" style="max-width:400px;text-align:center;border-top:4px solid #EFB14D">
+  <div style="font-size:40px;margin-bottom:12px">🔒</div>
+  <h1 style="margin-bottom:6px">Monday → Excel</h1>
+  <p style="font-size:13px;color:#9d9488;margin-bottom:20px">Enter your password to continue</p>
+  <input type="password" id="appPassword" placeholder="Password" style="text-align:center" onkeydown="if(event.key==='Enter') checkPassword()" />
+  <button class="btn-primary" onclick="checkPassword()" style="width:100%">Unlock →</button>
+  <p id="pwError" style="display:none;color:#c62828;font-size:13px;margin-top:10px">❌ Incorrect password. Please try again.</p>
+</div>
+
+<!-- Main App -->
+<div id="main-app" style="display:none;width:100%;display:none">
 <div class="card">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
-    <div style="width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#f6511d,#ff9f1c);display:flex;align-items:center;justify-content:center;font-size:22px">📋</div>
+    <div style="width:42px;height:42px;border-radius:4px;background:#EFB14D;display:flex;align-items:center;justify-content:center;font-size:22px">📋</div>
     <div>
       <h1>Monday.com → Excel</h1>
       <p class="sub" style="margin:0">Export any board with all columns & data</p>
@@ -120,12 +139,13 @@
 
 <script>
 const API = "https://api.monday.com/v2";
+const HARDCODED_TOKEN = localStorage.getItem("monday_api_key") || "";
+const APP_PASSWORD = "Finance2026#";
 let apiKey = "", allBoards = [], selectedBoard = null, allItems = [], allColumns = [];
 
-// Load saved token on startup
 window.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("monday_api_key");
-  if (saved) document.getElementById("apiKey").value = saved;
+  const authed = sessionStorage.getItem("app_authed");
+  if (authed === "1") unlockApp();
 });
 
 function setStep(n) {
@@ -153,6 +173,26 @@ async function gql(query) {
   const data = await res.json();
   if (data.errors) throw new Error(data.errors[0].message);
   return data.data;
+}
+
+function checkPassword() {
+  const entered = document.getElementById("appPassword").value;
+  if (entered === APP_PASSWORD) {
+    sessionStorage.setItem("app_authed", "1");
+    unlockApp();
+  } else {
+    document.getElementById("pwError").style.display = "";
+  }
+}
+
+function unlockApp() {
+  document.getElementById("step-password").style.display = "none";
+  document.getElementById("main-app").style.display = "";
+  const saved = localStorage.getItem("monday_api_key");
+  if (saved) {
+    apiKey = saved;
+    connectMonday();
+  }
 }
 
 async function connectMonday() {
@@ -304,5 +344,6 @@ function clearToken() {
 
 document.getElementById("apiKey").addEventListener("keydown", e => { if (e.key === "Enter") connectMonday(); });
 </script>
+</div><!-- end main-app -->
 </body>
 </html>
