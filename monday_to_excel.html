@@ -63,7 +63,7 @@
 </div>
 
 <!-- Main App -->
-<div id="main-app" style="display:none;width:100%;display:none">
+<div id="main-app" style="display:none;width:100%">
 <div class="card">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
     <div style="width:42px;height:42px;border-radius:4px;background:#EFB14D;display:flex;align-items:center;justify-content:center;font-size:22px">📋</div>
@@ -145,8 +145,12 @@ let apiKey = "", allBoards = [], selectedBoard = null, allItems = [], allColumns
 
 window.addEventListener("DOMContentLoaded", () => {
   const authed = sessionStorage.getItem("app_authed");
-  if (authed === "1") unlockApp();
-  // Do NOT auto-connect here — wait for password first
+  if (authed === "1") {
+    unlockApp();
+  } else {
+    document.getElementById("step-password").style.display = "";
+    document.getElementById("main-app").style.display = "none";
+  }
 });
 
 function setStep(n) {
@@ -188,11 +192,13 @@ function checkPassword() {
 
 function unlockApp() {
   document.getElementById("step-password").style.display = "none";
-  document.getElementById("main-app").style.display = "";
+  document.getElementById("main-app").style.display = "block";
   const saved = localStorage.getItem("monday_api_key");
   if (saved) {
     apiKey = saved;
-    connectMonday(); // Auto-connect only after password is verified
+    connectMonday();
+  } else {
+    setStep(0); // Show API token screen only if no saved token
   }
 }
 
