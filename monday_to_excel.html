@@ -52,14 +52,15 @@
 </style>
 </head>
 <body>
-<!-- Password Screen -->
-<div id="step-password" class="card" style="max-width:400px;text-align:center;border-top:4px solid #EFB14D">
+<div id="step-password" style="display:flex;flex-direction:column;align-items:center;width:100%">
+<div class="card" style="max-width:400px;text-align:center;border-top:4px solid #EFB14D">
   <div style="font-size:40px;margin-bottom:12px">🔒</div>
   <h1 style="margin-bottom:6px">Monday → Excel</h1>
   <p style="font-size:13px;color:#9d9488;margin-bottom:20px">Enter your password to continue</p>
   <input type="password" id="appPassword" placeholder="Password" style="text-align:center" onkeydown="if(event.key==='Enter') checkPassword()" />
   <button class="btn-primary" onclick="checkPassword()" style="width:100%">Unlock →</button>
   <p id="pwError" style="display:none;color:#c62828;font-size:13px;margin-top:10px">❌ Incorrect password. Please try again.</p>
+</div>
 </div>
 
 <!-- Main App -->
@@ -139,18 +140,13 @@
 
 <script>
 const API = "https://api.monday.com/v2";
-const HARDCODED_TOKEN = localStorage.getItem("monday_api_key") || "";
 const APP_PASSWORD = "Finance2026#";
 let apiKey = "", allBoards = [], selectedBoard = null, allItems = [], allColumns = [];
 
 window.addEventListener("DOMContentLoaded", () => {
-  const authed = sessionStorage.getItem("app_authed");
-  if (authed === "1") {
-    unlockApp();
-  } else {
-    document.getElementById("step-password").style.display = "";
-    document.getElementById("main-app").style.display = "none";
-  }
+  // Always show password screen first, hide main app
+  document.getElementById("step-password").style.display = "flex";
+  document.getElementById("main-app").style.display = "none";
 });
 
 function setStep(n) {
@@ -183,8 +179,13 @@ async function gql(query) {
 function checkPassword() {
   const entered = document.getElementById("appPassword").value;
   if (entered === APP_PASSWORD) {
-    sessionStorage.setItem("app_authed", "1");
-    unlockApp();
+    document.getElementById("step-password").style.display = "none";
+    document.getElementById("main-app").style.display = "block";
+    const saved = localStorage.getItem("monday_api_key");
+    if (saved) {
+      apiKey = saved;
+      connectMonday();
+    }
   } else {
     document.getElementById("pwError").style.display = "";
   }
@@ -197,8 +198,6 @@ function unlockApp() {
   if (saved) {
     apiKey = saved;
     connectMonday();
-  } else {
-    setStep(0); // Show API token screen only if no saved token
   }
 }
 
