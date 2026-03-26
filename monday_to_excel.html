@@ -146,6 +146,7 @@ let apiKey = "", allBoards = [], selectedBoard = null, allItems = [], allColumns
 window.addEventListener("DOMContentLoaded", () => {
   const authed = sessionStorage.getItem("app_authed");
   if (authed === "1") unlockApp();
+  // Do NOT auto-connect here — wait for password first
 });
 
 function setStep(n) {
@@ -191,7 +192,7 @@ function unlockApp() {
   const saved = localStorage.getItem("monday_api_key");
   if (saved) {
     apiKey = saved;
-    connectMonday();
+    connectMonday(); // Auto-connect only after password is verified
   }
 }
 
