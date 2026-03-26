@@ -264,22 +264,30 @@ function renderPreview() {
 
 function exportExcel() {
   const rows = buildRows();
-  if (!rows.length) return;
+  console.log("exportExcel called, rows:", rows.length);
+  if (!rows.length) { alert("No data to export!"); return; }
   const ws = XLSX.utils.json_to_sheet(rows);
   const keys = Object.keys(rows[0]);
   ws["!cols"] = keys.map(k => ({ wch: Math.min(Math.max(k.length, ...rows.map(r=>String(r[k]||"").length)) + 2, 40) }));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, selectedBoard.name.slice(0,31));
-  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  const blob = new Blob([wbout], { type: "application/octet-stream" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = selectedBoard.name + ".xlsx";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  try {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, selectedBoard.name.slice(0,31));
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([wbout], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = selectedBoard.name + ".xlsx";
+    document.body.appendChild(a);
+    console.log("Triggering download:", a.download);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log("Download triggered successfully");
+  } catch(e) {
+    alert("Export error: " + e.message);
+    console.error(e);
+  }
   document.getElementById("doneMsg").textContent = `${allItems.length} items from "${selectedBoard.name}" exported.`;
   document.getElementById("doneFile").innerHTML = `Saved as <code>${selectedBoard.name}.xlsx</code>`;
   setStep(3);
