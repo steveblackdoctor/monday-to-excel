@@ -184,7 +184,8 @@ async function gql(query) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": apiKey
+      "Authorization": apiKey,
+      "API-Version": "2023-10"
     },
     body: JSON.stringify({ query })
   });
@@ -259,16 +260,46 @@ async function selectBoard(id) {
   detectedNumericFormats = {};
 
   try {
-    const colData = await gql(`{ boards(ids:[${id}]) { columns { id title } } }`);
+    const colData = await gql(`{
+      boards(ids:[${id}]) {
+        columns {
+          id
+          title
+          type
+        }
+      }
+    }`);
+
     (colData?.boards?.[0]?.columns || []).forEach(c => {
-      colMap[c.id] = c.title;
+      colMap[c.id] = { title: c.title, type: c.type };
     });
 
     let cursor = null;
 
     do {
       const ca = cursor ? `, cursor:"${cursor}"` : "";
-      const d = await gql(`{ boards(ids:[${id}]) { items_page(limit:100${ca}) { cursor items { id name state created_at updated_at group { title } column_values { id text } } } } }`);
+      const d = await gql(`{
+        boards(ids:[${id}]) {
+          items_page(limit:100${ca}) {
+            cursor
+            items {
+              id
+              name
+              state
+              created_at
+              updated_at
+              group { title }
+              column_values {
+                id
+                type
+                text
+                value
+              }
+            }
+          }
+        }
+      }`);
+
       const pg = d?.boards?.[0]?.items_page;
       allItems = [...allItems, ...(pg?.items || [])];
       cursor = pg?.cursor || null;
@@ -285,8 +316,30 @@ async function selectBoard(id) {
   document.getElementById("loadingItems").style.display = "none";
 }
 
+function getColumnMeta(colId, fallbackType) {
+  const meta = colMap[colId];
+  return {
+    title: meta?.title || colId,
+    type: meta?.type || fallbackType || ""
+  };
+}
+
+function parseJsonSafe(value) {
+  if (value == null || value === "") return null;
+  if (typeof value === "object") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
 function normalizeNumber(value) {
   if (value == null) return null;
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
 
   const str = String(value).trim();
   if (!str) return null;
@@ -307,6 +360,32 @@ function normalizeNumber(value) {
   if (!Number.isFinite(num)) return null;
 
   return isPercent ? num / 100 : num;
+}
+
+function extractRawMondayValue(col) {
+  const meta = getColumnMeta(col.id, col.type);
+  const raw = parseJsonSafe(col.value);
+
+  if (col.text != null && String(col.text).trim() !== "") {
+    return col.text;
+  }
+
+  if (raw == null) return "";
+
+  if (typeof raw === "number") return raw;
+  if (typeof raw === "string") return raw;
+
+  if (raw.number != null) return raw.number;
+  if (raw.value != null && typeof raw.value !== "object") return raw.value;
+  if (raw.amount != null) return raw.amount;
+  if (raw.price != null) return raw.price;
+  if (raw.hour != null) return raw.hour;
+  if (raw.hours != null) return raw.hours;
+  if (raw.total != null && typeof raw.total !== "object") return raw.total;
+
+  if (meta.type === "numbers" && raw.number != null) return raw.number;
+
+  return "";
 }
 
 function guessNumberFormat(columnName, originalValue) {
@@ -332,25 +411,22 @@ function detectNumericColumns(items) {
 
   items.forEach(item => {
     (item.column_values || []).forEach(col => {
-      const key = colMap[col.id] || col.id;
-      const raw = col.text;
+      const meta = getColumnMeta(col.id, col.type);
+      const key = meta.title;
+      const rawValue = extractRawMondayValue(col);
 
-      if (!raw || !String(raw).trim()) return;
+      if (rawValue === "" || rawValue == null) return;
 
       if (!stats[key]) {
-        stats[key] = {
-          total: 0,
-          numeric: 0,
-          sample: raw
-        };
+        stats[key] = { total: 0, numeric: 0, sample: rawValue };
       }
 
       stats[key].total += 1;
 
-      const parsed = normalizeNumber(raw);
+      const parsed = normalizeNumber(rawValue);
       if (parsed !== null) {
         stats[key].numeric += 1;
-        if (!stats[key].sample) stats[key].sample = raw;
+        stats[key].sample = rawValue;
       }
     });
   });
@@ -395,9 +471,11 @@ function buildRows() {
     row["Created At"] = item.created_at ? new Date(item.created_at) : "";
     row["Updated At"] = item.updated_at ? new Date(item.updated_at) : "";
 
-    item.column_values.forEach(col => {
-      const key = colMap[col.id] || col.id;
-      row[key] = parseCellValue(key, col.text);
+    (item.column_values || []).forEach(col => {
+      const meta = getColumnMeta(col.id, col.type);
+      const key = meta.title;
+      const rawValue = extractRawMondayValue(col);
+      row[key] = parseCellValue(key, rawValue);
     });
 
     return row;
