@@ -25,7 +25,7 @@
   .board-list { max-height:380px; overflow-y:auto; display:grid; gap:8px; margin-top:10px; }
   .board-item { background:#fff; border:1px solid #e0e0e0; border-radius:4px; padding:13px 18px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
   .board-item:hover { border-color:var(--yellow); background:#fdf6e7; }
-  .steps { display:flex; align-items:center; gap:6px; font-size:12px; margin-bottom:24px; }
+  .steps { display:flex; align-items:center; gap:6px; font-size:12px; margin-bottom:24px; flex-wrap:wrap; }
   .step-dot { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; color:#fff; }
   .step-done { background:var(--yellow); }
   .step-active { background:var(--black); }
@@ -37,7 +37,7 @@
   td { padding:8px 12px; white-space:nowrap; max-width:160px; overflow:hidden; text-overflow:ellipsis; border-top:1px solid #f0f0f0; }
   tr:nth-child(even) td { background:var(--offwhite); }
   .table-wrap { overflow-x:auto; border-radius:4px; border:1px solid #e0e0e0; margin-bottom:20px; }
-  .actions { display:flex; gap:10px; }
+  .actions { display:flex; gap:10px; flex-wrap:wrap; }
   .loading { text-align:center; color:var(--brown); font-size:13px; padding:20px; }
 </style>
 </head>
@@ -53,10 +53,9 @@
   <p id="pwError" style="display:none;color:#c62828;font-size:13px;margin-top:10px">❌ Incorrect password.</p>
 </div>
 
-<!-- MAIN APP (hidden until password correct) -->
+<!-- MAIN APP -->
 <div id="app" style="display:none;width:100%;max-width:760px">
   <div class="card">
-    <!-- Header -->
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
       <div style="width:42px;height:42px;border-radius:4px;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:22px">📋</div>
       <div>
@@ -65,7 +64,6 @@
       </div>
     </div>
 
-    <!-- Steps -->
     <div class="steps" id="steps">
       <div class="step-dot step-active" id="dot0">1</div><span class="step-label active" id="lbl0">Connect</span>
       <span style="color:#ddd">›</span>
@@ -78,16 +76,16 @@
 
     <div id="errBox" class="error" style="display:none"></div>
 
-    <!-- Step 1: API Token -->
+    <!-- Step 1 -->
     <div id="s0">
       <label>Monday.com API Token</label>
       <p style="font-size:13px;color:var(--brown);margin-bottom:10px">Find it at: <strong>Monday.com → Avatar → Developers → My Access Tokens</strong></p>
-      <input type="password" id="apiKeyInput" placeholder="eyJhbGci..." />
+      <input type="password" id="apiKeyInput" placeholder="Paste your Monday token" />
       <button class="btn-primary" id="btnConnect" onclick="connectMonday()">Connect →</button>
-      <p style="font-size:12px;color:#aaa;margin-top:10px">🔒 Token saved locally in your browser. <a href="#" onclick="clearToken();return false;" style="color:#c62828">Forget token</a></p>
+      <p style="font-size:12px;color:#aaa;margin-top:10px">🔒 Token is saved only in this browser. <a href="#" onclick="clearToken();return false;" style="color:#c62828">Forget token</a></p>
     </div>
 
-    <!-- Step 2: Board List -->
+    <!-- Step 2 -->
     <div id="s1" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <strong style="font-size:15px">Choose a Board</strong>
@@ -98,7 +96,7 @@
       <div class="loading" id="loadingItems" style="display:none">⏳ Fetching all items…</div>
     </div>
 
-    <!-- Step 3: Preview -->
+    <!-- Step 3 -->
     <div id="s2" style="display:none">
       <strong style="font-size:15px" id="previewTitle"></strong>
       <p style="font-size:13px;color:var(--brown);margin:4px 0 12px" id="previewMeta"></p>
@@ -110,13 +108,13 @@
       </div>
     </div>
 
-    <!-- Step 4: Done -->
+    <!-- Step 4 -->
     <div id="s3" style="display:none" class="success">
       <div style="font-size:52px;margin-bottom:12px">✅</div>
       <h2 style="color:#7a5c00;font-size:18px;margin-bottom:8px">Export Complete!</h2>
       <p style="font-size:14px;margin-bottom:6px" id="doneMsg"></p>
       <p style="color:var(--brown);font-size:13px;margin-bottom:24px" id="doneFile"></p>
-      <div style="display:flex;gap:10px;justify-content:center">
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="btn-primary" onclick="goBack()">Export Another Board</button>
         <button class="btn-yellow" onclick="exportExcel()">⬇ Download Again</button>
       </div>
@@ -127,17 +125,47 @@
 <script>
 const PASSWORD = "Finance2026#";
 const API = "https://api.monday.com/v2";
-const HARDCODED_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjYzNzk3MDc3NiwiYWFpIjoxMSwidWlkIjo4MjE5MjA1NSwiaWFkIjoiMjAyNi0wMy0yNlQwNToxNDo1OC4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MjA4NDc4NzMsInJnbiI6InVzZTEifQ.CS03TF2Y7J73cNIhYpzBU9m3tfeRZyHUn2f9CsG3ZuE";
-let apiKey = HARDCODED_TOKEN, allBoards = [], selectedBoard = null, allItems = [], colMap = {};
 
-// Password check — always shown first
-document.getElementById("pwInput").addEventListener("keydown", e => { if (e.key === "Enter") checkPw(); });
+let apiKey = localStorage.getItem("monday_api_key") || "";
+let allBoards = [];
+let selectedBoard = null;
+let allItems = [];
+let colMap = {};
+
+const NUMERIC_COLUMN_FORMATS = {
+  "Hours": "0.00",
+  "Total Hours": "0.00",
+  "Billable Hours": "0.00",
+  "Cost": "$#,##0.00",
+  "Total Cost": "$#,##0.00",
+  "Budget": "$#,##0.00",
+  "Amount": "$#,##0.00"
+};
+
+const DATE_COLUMNS = ["Created At", "Updated At"];
+
+document.getElementById("pwInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") checkPw();
+});
+
+document.getElementById("apiKeyInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") connectMonday();
+});
 
 function checkPw() {
   if (document.getElementById("pwInput").value === PASSWORD) {
     document.getElementById("pw-screen").style.display = "none";
     document.getElementById("app").style.display = "block";
-    connectMonday(); // Always use hardcoded token
+
+    const saved = localStorage.getItem("monday_api_key") || "";
+    document.getElementById("apiKeyInput").value = saved;
+
+    if (saved) {
+      apiKey = saved;
+      connectMonday();
+    } else {
+      setStep(0);
+    }
   } else {
     document.getElementById("pwError").style.display = "";
   }
@@ -145,135 +173,320 @@ function checkPw() {
 
 function setStep(n) {
   [0,1,2,3].forEach(i => {
-    document.getElementById("s"+i).style.display = i===n ? "" : "none";
-    const dot = document.getElementById("dot"+i), lbl = document.getElementById("lbl"+i);
-    dot.className = "step-dot " + (i<n?"step-done":i===n?"step-active":"step-idle");
-    dot.textContent = i<n ? "✓" : i+1;
-    lbl.className = "step-label" + (i===n?" active":"");
+    document.getElementById("s" + i).style.display = i === n ? "" : "none";
+    const dot = document.getElementById("dot" + i);
+    const lbl = document.getElementById("lbl" + i);
+    dot.className = "step-dot " + (i < n ? "step-done" : i === n ? "step-active" : "step-idle");
+    dot.textContent = i < n ? "✓" : i + 1;
+    lbl.className = "step-label" + (i === n ? " active" : "");
   });
 }
 
 function showError(msg) {
   const el = document.getElementById("errBox");
-  el.textContent = "⚠️ "+msg; el.style.display = msg?"":"none";
+  el.textContent = msg ? "⚠️ " + msg : "";
+  el.style.display = msg ? "" : "none";
 }
 
 async function gql(query) {
   const res = await fetch(API, {
-    method:"POST",
-    headers:{"Content-Type":"application/json", Authorization: apiKey},
-    body: JSON.stringify({query})
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": apiKey
+    },
+    body: JSON.stringify({ query })
   });
+
   const data = await res.json();
-  if (data.errors) throw new Error(data.errors[0].message);
+
+  if (data.errors && data.errors.length) {
+    throw new Error(data.errors[0].message);
+  }
+
   return data.data;
 }
 
 async function connectMonday() {
   showError("");
+
   const btn = document.getElementById("btnConnect");
-  if (btn) { btn.disabled=true; btn.textContent="Connecting…"; }
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Connecting…";
+  }
+
   const inputVal = document.getElementById("apiKeyInput")?.value?.trim();
   if (inputVal) apiKey = inputVal;
+
+  if (!apiKey) {
+    showError("Please enter your Monday API token.");
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Connect →";
+    }
+    return;
+  }
+
   try {
     const data = await gql(`{ boards(limit:100) { id name items_count } }`);
     localStorage.setItem("monday_api_key", apiKey);
     allBoards = data.boards || [];
     renderBoards(allBoards);
     setStep(1);
-  } catch(e) { showError("Connection failed: "+e.message); }
-  if (btn) { btn.disabled=false; btn.textContent="Connect →"; }
+  } catch (e) {
+    showError("Connection failed: " + e.message);
+  }
+
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "Connect →";
+  }
 }
 
 function renderBoards(list) {
-  document.getElementById("boardCount").textContent = list.length+" boards";
-  document.getElementById("boardList").innerHTML = list.map(b =>
-    `<div class="board-item" onclick="selectBoard(${b.id})">
-      <span style="font-weight:600;font-size:14px">${b.name}</span>
+  document.getElementById("boardCount").textContent = list.length + " boards";
+  document.getElementById("boardList").innerHTML = list.map(b => `
+    <div class="board-item" onclick="selectBoard(${b.id})">
+      <span style="font-weight:600;font-size:14px">${escapeHtml(b.name)}</span>
       <span style="font-size:12px;color:var(--brown)">${b.items_count} items →</span>
-    </div>`).join("") || "<p style='color:#aaa;text-align:center;font-size:13px'>No boards found.</p>";
+    </div>
+  `).join("") || "<p style='color:#aaa;text-align:center;font-size:13px'>No boards found.</p>";
 }
 
 function filterBoards() {
   const q = document.getElementById("boardSearch").value.toLowerCase();
-  renderBoards(allBoards.filter(b => b.name.toLowerCase().includes(q)));
+  renderBoards(allBoards.filter(b => (b.name || "").toLowerCase().includes(q)));
 }
 
 async function selectBoard(id) {
-  selectedBoard = allBoards.find(b => b.id==id);
+  selectedBoard = allBoards.find(b => b.id == id);
   document.getElementById("loadingItems").style.display = "";
-  showError(""); allItems = []; colMap = {};
+  showError("");
+  allItems = [];
+  colMap = {};
+
   try {
     const colData = await gql(`{ boards(ids:[${id}]) { columns { id title } } }`);
-    (colData?.boards?.[0]?.columns||[]).forEach(c => colMap[c.id]=c.title);
+    (colData?.boards?.[0]?.columns || []).forEach(c => {
+      colMap[c.id] = c.title;
+    });
+
     let cursor = null;
+
     do {
       const ca = cursor ? `, cursor:"${cursor}"` : "";
-      const d = await gql(`{ boards(ids:[${id}]) { items_page(limit:100${ca}) { cursor items {
-        id name state created_at updated_at group{title} column_values{id text}
-      }}}}`);
+      const d = await gql(`{ boards(ids:[${id}]) { items_page(limit:100${ca}) { cursor items { id name state created_at updated_at group { title } column_values { id text } } } } }`);
       const pg = d?.boards?.[0]?.items_page;
-      allItems = [...allItems, ...(pg?.items||[])];
-      cursor = pg?.cursor||null;
-    } while(cursor);
-    renderPreview(); setStep(2);
-  } catch(e) { showError("Failed to fetch items: "+e.message); }
+      allItems = [...allItems, ...(pg?.items || [])];
+      cursor = pg?.cursor || null;
+    } while (cursor);
+
+    renderPreview();
+    setStep(2);
+  } catch (e) {
+    showError("Failed to fetch items: " + e.message);
+  }
+
   document.getElementById("loadingItems").style.display = "none";
+}
+
+function normalizeNumber(value) {
+  if (value == null) return "";
+
+  const str = String(value).trim();
+  if (!str) return "";
+
+  const cleaned = str
+    .replace(/\$/g, "")
+    .replace(/,/g, "")
+    .replace(/%/g, "")
+    .replace(/\bhrs?\b/gi, "")
+    .replace(/\bhours?\b/gi, "")
+    .replace(/\s+/g, "");
+
+  const num = Number(cleaned);
+  return Number.isFinite(num) ? num : str;
+}
+
+function parseCellValue(columnName, rawValue) {
+  if (rawValue == null || rawValue === "") return "";
+
+  if (DATE_COLUMNS.includes(columnName)) {
+    const dt = new Date(rawValue);
+    return isNaN(dt.getTime()) ? rawValue : dt;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(NUMERIC_COLUMN_FORMATS, columnName)) {
+    return normalizeNumber(rawValue);
+  }
+
+  return rawValue;
 }
 
 function buildRows() {
   return allItems.map(item => {
     const row = {};
-    row["Item ID"] = item.id;
-    row["Item Name"] = item.name;
-    row["Group"] = item.group?.title||"";
-    row["State"] = item.state||"";
-    row["Created At"] = item.created_at ? new Date(item.created_at).toLocaleString() : "";
-    row["Updated At"] = item.updated_at ? new Date(item.updated_at).toLocaleString() : "";
-    item.column_values.forEach(col => { if(col.text) row[colMap[col.id]||col.id] = col.text; });
+
+    row["Item ID"] = Number(item.id);
+    row["Item Name"] = item.name || "";
+    row["Group"] = item.group?.title || "";
+    row["State"] = item.state || "";
+    row["Created At"] = item.created_at ? new Date(item.created_at) : "";
+    row["Updated At"] = item.updated_at ? new Date(item.updated_at) : "";
+
+    item.column_values.forEach(col => {
+      const key = colMap[col.id] || col.id;
+      row[key] = parseCellValue(key, col.text);
+    });
+
     return row;
   });
 }
 
 function renderPreview() {
-  const rows = buildRows().slice(0,6);
-  if(!rows.length) return;
-  const allKeys = Object.keys(buildRows()[0]||{});
-  const cols = allKeys.slice(0,8);
-  document.getElementById("previewTitle").textContent = "Preview: "+selectedBoard.name;
+  const fullRows = buildRows();
+  const rows = fullRows.slice(0, 6);
+  if (!rows.length) return;
+
+  const allKeys = Object.keys(fullRows[0] || {});
+  const cols = allKeys.slice(0, 8);
+
+  document.getElementById("previewTitle").textContent = "Preview: " + selectedBoard.name;
   document.getElementById("previewMeta").textContent = `${allItems.length} items · showing first 6 rows`;
   document.getElementById("exportInfo").textContent = `📊 Export will include all ${allItems.length} items with all ${allKeys.length} columns.`;
-  const thead = `<thead><tr>${cols.map(c=>`<th>${c}</th>`).join("")}<th style="opacity:.5;font-weight:400">+${allKeys.length-cols.length} more</th></tr></thead>`;
-  const tbody = `<tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${r[c]||"—"}</td>`).join("")}<td style="color:#ccc">…</td></tr>`).join("")}</tbody>`;
-  document.getElementById("previewTable").innerHTML = thead+tbody;
+
+  const displayValue = (val) => {
+    if (val instanceof Date) return val.toLocaleString();
+    if (val === "" || val == null) return "—";
+    return String(val);
+  };
+
+  const thead = `<thead><tr>${
+    cols.map(c => `<th>${escapeHtml(c)}</th>`).join("")
+  }<th style="opacity:.5;font-weight:400">+${Math.max(allKeys.length - cols.length, 0)} more</th></tr></thead>`;
+
+  const tbody = `<tbody>${
+    rows.map(r => `<tr>${
+      cols.map(c => `<td>${escapeHtml(displayValue(r[c]))}</td>`).join("")
+    }<td style="color:#ccc">…</td></tr>`).join("")
+  }</tbody>`;
+
+  document.getElementById("previewTable").innerHTML = thead + tbody;
 }
 
 function exportExcel() {
   const rows = buildRows();
-  if(!rows.length){ alert("No data!"); return; }
+
+  if (!rows.length) {
+    alert("No data!");
+    return;
+  }
+
   try {
     const ws = XLSX.utils.json_to_sheet(rows);
     const keys = Object.keys(rows[0]);
-    ws["!cols"] = keys.map(k=>({wch:Math.min(Math.max(k.length,...rows.map(r=>String(r[k]||"").length))+2,40)}));
-    const safeName = selectedBoard.name.replace(/[:\\\/\?\*\[\]]/g,"-").slice(0,31);
+
+    ws["!cols"] = keys.map(k => ({
+      wch: Math.min(
+        Math.max(
+          k.length,
+          ...rows.map(r => {
+            const v = r[k];
+            if (v instanceof Date) return v.toLocaleString().length;
+            return String(v ?? "").length;
+          })
+        ) + 2,
+        40
+      )
+    }));
+
+    ws["!autofilter"] = {
+      ref: XLSX.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: rows.length, c: keys.length - 1 }
+      })
+    };
+
+    DATE_COLUMNS.forEach(colName => {
+      const c = keys.indexOf(colName);
+      if (c === -1) return;
+
+      for (let r = 1; r <= rows.length; r++) {
+        const ref = XLSX.utils.encode_cell({ r, c });
+        if (!ws[ref]) continue;
+
+        if (rows[r - 1][colName] instanceof Date) {
+          ws[ref].t = "d";
+          ws[ref].z = "m/d/yyyy h:mm AM/PM";
+        }
+      }
+    });
+
+    Object.entries(NUMERIC_COLUMN_FORMATS).forEach(([colName, fmt]) => {
+      const c = keys.indexOf(colName);
+      if (c === -1) return;
+
+      for (let r = 1; r <= rows.length; r++) {
+        const ref = XLSX.utils.encode_cell({ r, c });
+        if (!ws[ref]) continue;
+
+        const value = rows[r - 1][colName];
+        if (typeof value === "number" && Number.isFinite(value)) {
+          ws[ref].t = "n";
+          ws[ref].v = value;
+          ws[ref].z = fmt;
+        }
+      }
+    });
+
+    const safeName = (selectedBoard.name || "Monday Export")
+      .replace(/[:\\\/\?\*\[\]]/g, "-")
+      .slice(0, 31);
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, safeName);
-    const wbout = XLSX.write(wb,{bookType:"xlsx",type:"array"});
-    const blob = new Blob([wbout],{type:"application/octet-stream"});
+
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([wbout], { type: "application/octet-stream" });
     const url = URL.createObjectURL(blob);
+
     const a = document.createElement("a");
-    a.href=url; a.download=selectedBoard.name+".xlsx";
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
+    a.href = url;
+    a.download = safeName + ".xlsx";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
     document.getElementById("doneMsg").textContent = `${allItems.length} items from "${selectedBoard.name}" exported.`;
-    document.getElementById("doneFile").innerHTML = `Saved as <code>${selectedBoard.name}.xlsx</code>`;
+    document.getElementById("doneFile").innerHTML = `Saved as <code>${escapeHtml(safeName)}.xlsx</code>`;
     setStep(3);
-  } catch(e){ alert("Export error: "+e.message); }
+  } catch (e) {
+    alert("Export error: " + e.message);
+  }
 }
 
-function goBack() { setStep(1); showError(""); }
-function clearToken() { localStorage.removeItem("monday_api_key"); document.getElementById("apiKeyInput").value=""; alert("Token cleared!"); }
-document.getElementById("apiKeyInput").addEventListener("keydown", e=>{ if(e.key==="Enter") connectMonday(); });
+function goBack() {
+  setStep(1);
+  showError("");
+}
+
+function clearToken() {
+  localStorage.removeItem("monday_api_key");
+  apiKey = "";
+  document.getElementById("apiKeyInput").value = "";
+  alert("Saved token cleared.");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 </script>
 </body>
 </html>
