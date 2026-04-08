@@ -43,7 +43,6 @@
 </head>
 <body>
 
-<!-- PASSWORD SCREEN -->
 <div id="pw-screen" class="card" style="max-width:400px;text-align:center;margin-top:60px">
   <div style="font-size:40px;margin-bottom:12px">🔒</div>
   <h1 style="margin-bottom:6px">Monday → Excel</h1>
@@ -53,7 +52,6 @@
   <p id="pwError" style="display:none;color:#c62828;font-size:13px;margin-top:10px">❌ Incorrect password.</p>
 </div>
 
-<!-- MAIN APP -->
 <div id="app" style="display:none;width:100%;max-width:760px">
   <div class="card">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
@@ -76,7 +74,6 @@
 
     <div id="errBox" class="error" style="display:none"></div>
 
-    <!-- Step 1 -->
     <div id="s0">
       <label>Monday.com API Token</label>
       <p style="font-size:13px;color:var(--brown);margin-bottom:10px">Find it at: <strong>Monday.com → Avatar → Developers → My Access Tokens</strong></p>
@@ -85,7 +82,6 @@
       <p style="font-size:12px;color:#aaa;margin-top:10px">🔒 Token is saved only in this browser. <a href="#" onclick="clearToken();return false;" style="color:#c62828">Forget token</a></p>
     </div>
 
-    <!-- Step 2 -->
     <div id="s1" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <strong style="font-size:15px">Choose a Board</strong>
@@ -96,7 +92,6 @@
       <div class="loading" id="loadingItems" style="display:none">⏳ Fetching all items…</div>
     </div>
 
-    <!-- Step 3 -->
     <div id="s2" style="display:none">
       <strong style="font-size:15px" id="previewTitle"></strong>
       <p style="font-size:13px;color:var(--brown);margin:4px 0 12px" id="previewMeta"></p>
@@ -108,7 +103,6 @@
       </div>
     </div>
 
-    <!-- Step 4 -->
     <div id="s3" style="display:none" class="success">
       <div style="font-size:52px;margin-bottom:12px">✅</div>
       <h2 style="color:#7a5c00;font-size:18px;margin-bottom:8px">Export Complete!</h2>
@@ -131,15 +125,12 @@ let allBoards = [];
 let selectedBoard = null;
 let allItems = [];
 let colMap = {};
+let detectedNumericFormats = {};
 
 const NUMERIC_COLUMN_FORMATS = {
-  "Hours": "0.00",
-  "Total Hours": "0.00",
-  "Billable Hours": "0.00",
-  "Cost": "$#,##0.00",
-  "Total Cost": "$#,##0.00",
-  "Budget": "$#,##0.00",
-  "Amount": "$#,##0.00"
+  "Internal Hours": "0.00",
+  "Cost (Freelance)": "$#,##0.00",
+  "Item ID": "0"
 };
 
 const DATE_COLUMNS = ["Created At", "Updated At"];
@@ -265,6 +256,7 @@ async function selectBoard(id) {
   showError("");
   allItems = [];
   colMap = {};
+  detectedNumericFormats = {};
 
   try {
     const colData = await gql(`{ boards(ids:[${id}]) { columns { id title } } }`);
@@ -282,6 +274,8 @@ async function selectBoard(id) {
       cursor = pg?.cursor || null;
     } while (cursor);
 
+    detectedNumericFormats = detectNumericColumns(allItems);
+
     renderPreview();
     setStep(2);
   } catch (e) {
@@ -292,10 +286,12 @@ async function selectBoard(id) {
 }
 
 function normalizeNumber(value) {
-  if (value == null) return "";
+  if (value == null) return null;
 
   const str = String(value).trim();
-  if (!str) return "";
+  if (!str) return null;
+
+  const isPercent = /%/.test(str);
 
   const cleaned = str
     .replace(/\$/g, "")
@@ -305,8 +301,70 @@ function normalizeNumber(value) {
     .replace(/\bhours?\b/gi, "")
     .replace(/\s+/g, "");
 
+  if (!cleaned || cleaned === "-" || cleaned === ".") return null;
+
   const num = Number(cleaned);
-  return Number.isFinite(num) ? num : str;
+  if (!Number.isFinite(num)) return null;
+
+  return isPercent ? num / 100 : num;
+}
+
+function guessNumberFormat(columnName, originalValue) {
+  const str = String(originalValue || "");
+
+  if (/\$/.test(str) || /cost|amount|budget|price|rate|revenue|spend/i.test(columnName)) {
+    return "$#,##0.00";
+  }
+
+  if (/%/.test(str) || /margin|percent|percentage|pct/i.test(columnName)) {
+    return "0.00%";
+  }
+
+  if (/hour|hours|hrs/i.test(columnName)) {
+    return "0.00";
+  }
+
+  return "0.00";
+}
+
+function detectNumericColumns(items) {
+  const stats = {};
+
+  items.forEach(item => {
+    (item.column_values || []).forEach(col => {
+      const key = colMap[col.id] || col.id;
+      const raw = col.text;
+
+      if (!raw || !String(raw).trim()) return;
+
+      if (!stats[key]) {
+        stats[key] = {
+          total: 0,
+          numeric: 0,
+          sample: raw
+        };
+      }
+
+      stats[key].total += 1;
+
+      const parsed = normalizeNumber(raw);
+      if (parsed !== null) {
+        stats[key].numeric += 1;
+        if (!stats[key].sample) stats[key].sample = raw;
+      }
+    });
+  });
+
+  const detected = {};
+
+  Object.entries(stats).forEach(([key, s]) => {
+    const ratio = s.total ? s.numeric / s.total : 0;
+    if (s.numeric >= 2 && ratio >= 0.8) {
+      detected[key] = guessNumberFormat(key, s.sample);
+    }
+  });
+
+  return detected;
 }
 
 function parseCellValue(columnName, rawValue) {
@@ -317,8 +375,10 @@ function parseCellValue(columnName, rawValue) {
     return isNaN(dt.getTime()) ? rawValue : dt;
   }
 
-  if (Object.prototype.hasOwnProperty.call(NUMERIC_COLUMN_FORMATS, columnName)) {
-    return normalizeNumber(rawValue);
+  const numericFormats = { ...detectedNumericFormats, ...NUMERIC_COLUMN_FORMATS };
+  if (Object.prototype.hasOwnProperty.call(numericFormats, columnName)) {
+    const num = normalizeNumber(rawValue);
+    return num !== null ? num : rawValue;
   }
 
   return rawValue;
@@ -386,6 +446,7 @@ function exportExcel() {
   try {
     const ws = XLSX.utils.json_to_sheet(rows);
     const keys = Object.keys(rows[0]);
+    const numericFormats = { ...detectedNumericFormats, ...NUMERIC_COLUMN_FORMATS };
 
     ws["!cols"] = keys.map(k => ({
       wch: Math.min(
@@ -423,7 +484,7 @@ function exportExcel() {
       }
     });
 
-    Object.entries(NUMERIC_COLUMN_FORMATS).forEach(([colName, fmt]) => {
+    Object.entries(numericFormats).forEach(([colName, fmt]) => {
       const c = keys.indexOf(colName);
       if (c === -1) return;
 
