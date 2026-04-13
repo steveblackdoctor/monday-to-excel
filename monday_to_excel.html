@@ -133,7 +133,7 @@ const NUMERIC_COLUMN_FORMATS = {
   "Item ID": "0"
 };
 
-const DATE_COLUMNS = ["Created At", "Updated At"];
+const DATE_COLUMNS = [];
 
 document.getElementById("pwInput").addEventListener("keydown", e => {
   if (e.key === "Enter") checkPw();
@@ -468,8 +468,6 @@ function buildRows() {
     row["Item Name"] = item.name || "";
     row["Group"] = item.group?.title || "";
     row["State"] = item.state || "";
-    row["Created At"] = item.created_at ? new Date(item.created_at) : "";
-    row["Updated At"] = item.updated_at ? new Date(item.updated_at) : "";
 
     (item.column_values || []).forEach(col => {
       const meta = getColumnMeta(col.id, col.type);
