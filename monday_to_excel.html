@@ -120,7 +120,8 @@
 const PASSWORD = "Finance2026#";
 const API = "https://api.monday.com/v2";
 
-let apiKey = localStorage.getItem("monday_api_key") || "";
+const MONDAY_API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY0Mjc5Nzc4MywiYWFpIjoxMSwidWlkIjo4MjE5MjA1NSwiaWFkIjoiMjAyNi0wNC0wOFQwMDo0MzowMi4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MjA4NDc4NzMsInJnbiI6InVzZTEifQ.mitwi07zu1LjUGam7loaOARdRIbX3BczV3I7wnEAzko";
+let apiKey = localStorage.getItem("monday_api_key") || MONDAY_API_KEY;
 let allBoards = [];
 let selectedBoard = null;
 let allItems = [];
@@ -148,15 +149,8 @@ function checkPw() {
     document.getElementById("pw-screen").style.display = "none";
     document.getElementById("app").style.display = "block";
 
-    const saved = localStorage.getItem("monday_api_key") || "";
-    document.getElementById("apiKeyInput").value = saved;
-
-    if (saved) {
-      apiKey = saved;
-      connectMonday();
-    } else {
-      setStep(0);
-    }
+    apiKey = localStorage.getItem("monday_api_key") || MONDAY_API_KEY;
+    connectMonday();
   } else {
     document.getElementById("pwError").style.display = "";
   }
