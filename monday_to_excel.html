@@ -6,109 +6,151 @@
 <title>Monday → Excel</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root { --yellow:#EFB14D; --black:#000; --brown:#9d9488; --offwhite:#F4F1ED; }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:Inter,sans-serif; background:var(--offwhite); color:var(--black); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:32px 16px; }
-  .card { background:#fff; border-radius:4px; padding:32px; width:100%; max-width:760px; box-shadow:0 2px 12px rgba(0,0,0,0.08); border-top:4px solid var(--yellow); }
-  h1 { font-size:20px; font-weight:700; margin-bottom:4px; }
-  label { font-size:13px; font-weight:600; display:block; margin-bottom:6px; }
-  input[type=password], input[type=text] { width:100%; padding:10px 12px; border-radius:4px; border:1px solid #ccc; font-size:14px; margin-bottom:14px; outline:none; }
-  input:focus { border-color:var(--yellow); }
-  button { border:none; border-radius:4px; padding:10px 22px; font-size:14px; font-weight:600; cursor:pointer; }
-  .btn-primary { background:var(--black); color:#fff; }
-  .btn-primary:disabled { background:#ccc; cursor:not-allowed; }
-  .btn-yellow { background:var(--yellow); color:var(--black); }
-  .btn-back { background:var(--offwhite); color:var(--black); border:1px solid #ccc; }
-  .error { background:#fff0f0; border:1px solid #ffc5c5; border-radius:4px; padding:10px 14px; margin-bottom:16px; color:#c62828; font-size:13px; }
-  .info { background:#fdf6e7; border:1px solid var(--yellow); border-radius:4px; padding:10px 14px; margin-bottom:16px; font-size:13px; color:#7a5c00; }
-  .success { background:#fdf6e7; border:1px solid var(--yellow); border-radius:4px; padding:40px; text-align:center; }
-  .board-list { max-height:380px; overflow-y:auto; display:grid; gap:8px; margin-top:10px; }
-  .board-item { background:#fff; border:1px solid #e0e0e0; border-radius:4px; padding:13px 18px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
-  .board-item:hover { border-color:var(--yellow); background:#fdf6e7; }
-  .steps { display:flex; align-items:center; gap:6px; font-size:12px; margin-bottom:24px; flex-wrap:wrap; }
-  .step-dot { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; color:#fff; }
-  .step-done { background:var(--yellow); }
-  .step-active { background:var(--black); }
-  .step-idle { background:var(--brown); opacity:0.4; }
-  .step-label { color:var(--brown); }
-  .step-label.active { font-weight:600; color:var(--black); }
-  table { border-collapse:collapse; width:100%; font-size:12px; }
-  th { padding:9px 12px; text-align:left; font-weight:700; white-space:nowrap; color:#fff; border-bottom:2px solid var(--yellow); background:var(--black); }
-  td { padding:8px 12px; white-space:nowrap; max-width:160px; overflow:hidden; text-overflow:ellipsis; border-top:1px solid #f0f0f0; }
-  tr:nth-child(even) td { background:var(--offwhite); }
-  .table-wrap { overflow-x:auto; border-radius:4px; border:1px solid #e0e0e0; margin-bottom:20px; }
-  .actions { display:flex; gap:10px; flex-wrap:wrap; }
-  .loading { text-align:center; color:var(--brown); font-size:13px; padding:20px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, sans-serif; background: #f5f5fb; color: #1a1a2e; min-height: 100vh; display: flex; justify-content: center; padding: 32px 16px; }
+  .card { background: #fff; border-radius: 14px; padding: 32px; width: 100%; max-width: 860px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); height: fit-content; }
+  h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: #666; margin-bottom: 24px; }
+  label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; }
+  input[type=password], input[type=text] { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; margin-bottom: 14px; outline: none; }
+  input:focus { border-color: #6c63ff; }
+  button { border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-primary { background: #6c63ff; color: #fff; }
+  .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+  .btn-green { background: #00c875; color: #fff; }
+  .btn-back { background: #f0f0f0; color: #333; }
+  .btn-secondary { background: #f6f4ff; color: #4c43d4; border: 1px solid #ddd7ff; }
+  .btn-sm { padding: 8px 12px; font-size: 12px; }
+  .error { background: #fff0f0; border: 1px solid #ffc5c5; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; color: #c62828; font-size: 13px; }
+  .info { background: #f0f7ff; border: 1px solid #c8e0ff; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #1560bd; }
+  .success { background: #f0fff8; border: 1px solid #b2f0d4; border-radius: 12px; padding: 40px; text-align: center; }
+  .board-list { max-height: 380px; overflow-y: auto; display: grid; gap: 8px; margin-top: 10px; }
+  .board-item { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 13px 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: border-color 0.15s; }
+  .board-item:hover { border-color: #6c63ff; }
+  .board-name { font-weight: 600; font-size: 14px; }
+  .board-count { font-size: 12px; color: #aaa; }
+  .steps { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .step-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #fff; }
+  .step-done { background: #00c875; }
+  .step-active { background: #6c63ff; }
+  .step-idle { background: #d0d0d0; }
+  .step-label { font-weight: 400; color: #aaa; }
+  .step-label.active { font-weight: 600; color: #6c63ff; }
+  .step-label.done { color: #00875a; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  th { padding: 9px 12px; text-align: left; font-weight: 700; white-space: nowrap; color: #444; border-bottom: 2px solid #e0e0e0; background: #f4f4f8; }
+  td { padding: 8px 12px; white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; border-top: 1px solid #f0f0f0; }
+  tr:nth-child(even) { background: #fafafa; }
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #e0e0e0; margin-bottom: 20px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .loading { text-align: center; color: #6c63ff; font-size: 13px; padding: 20px; }
+  .panel { border: 1px solid #e5e5ef; border-radius: 12px; padding: 16px; margin-bottom: 18px; background: #fcfcff; }
+  .panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .panel-title { font-size: 15px; font-weight: 700; }
+  .panel-sub { font-size: 12px; color: #777; margin-top: 4px; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; max-height: 280px; overflow-y: auto; }
+  .chip { display: flex; align-items: center; gap: 10px; border: 1px solid #e3e3ee; border-radius: 10px; padding: 10px 12px; background: #fff; }
+  .chip:hover { border-color: #cfc8ff; }
+  .chip input { margin: 0; }
+  .chip-label { font-size: 13px; font-weight: 600; color: #333; }
+  .chip-meta { font-size: 11px; color: #888; }
+  .summary-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .summary-pill { background: #f6f4ff; color: #4c43d4; border: 1px solid #ddd7ff; border-radius: 999px; padding: 7px 10px; font-size: 12px; font-weight: 600; }
+  #pw-screen { max-width: 400px; margin: 60px auto; text-align: center; }
 </style>
 </head>
 <body>
 
-<div id="pw-screen" class="card" style="max-width:400px;text-align:center;margin-top:60px">
+<!-- Password screen -->
+<div id="pw-screen" class="card">
   <div style="font-size:40px;margin-bottom:12px">🔒</div>
   <h1 style="margin-bottom:6px">Monday → Excel</h1>
-  <p style="font-size:13px;color:var(--brown);margin-bottom:20px">Enter your password to continue</p>
+  <p style="font-size:13px;color:#666;margin-bottom:20px">Enter your password to continue</p>
   <input type="password" id="pwInput" placeholder="Password" style="text-align:center" />
   <button class="btn-primary" onclick="checkPw()" style="width:100%">Unlock →</button>
   <p id="pwError" style="display:none;color:#c62828;font-size:13px;margin-top:10px">❌ Incorrect password.</p>
 </div>
 
-<div id="app" style="display:none;width:100%;max-width:760px">
+<!-- Main app -->
+<div id="app" style="display:none;width:100%;max-width:860px">
   <div class="card">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
-      <div style="width:42px;height:42px;border-radius:4px;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:22px">📋</div>
+      <div style="width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#f6511d,#ff9f1c);display:flex;align-items:center;justify-content:center;font-size:22px">📋</div>
       <div>
         <h1>Monday.com → Excel</h1>
-        <p style="font-size:13px;color:var(--brown)">Export any board with all columns & data</p>
+        <p class="sub" style="margin:0">Export any board with only the columns you want</p>
       </div>
     </div>
 
     <div class="steps" id="steps">
-      <div class="step-dot step-active" id="dot1">1</div><span class="step-label active" id="lbl1">Select Board</span>
+      <div class="step-dot step-active" id="dot1">1</div>
+      <span class="step-label active" id="lbl1">Select Board</span>
       <span style="color:#ddd">›</span>
-      <div class="step-dot step-idle" id="dot2">2</div><span class="step-label" id="lbl2">Preview</span>
+      <div class="step-dot step-idle" id="dot2">2</div>
+      <span class="step-label" id="lbl2">Choose Columns</span>
       <span style="color:#ddd">›</span>
-      <div class="step-dot step-idle" id="dot3">3</div><span class="step-label" id="lbl3">Done</span>
+      <div class="step-dot step-idle" id="dot3">3</div>
+      <span class="step-label" id="lbl3">Done</span>
     </div>
 
     <div id="errBox" class="error" style="display:none"></div>
 
-    <div id="s0">
-      <label>Monday.com API Token</label>
-      <p style="font-size:13px;color:var(--brown);margin-bottom:10px">Find it at: <strong>Monday.com → Avatar → Developers → My Access Tokens</strong></p>
-      <input type="password" id="apiKeyInput" placeholder="Paste your Monday token" />
-      <button class="btn-primary" id="btnConnect" onclick="connectMonday()">Connect →</button>
-      <p style="font-size:12px;color:#aaa;margin-top:10px">🔒 Token is saved only in this browser. <a href="#" onclick="clearToken();return false;" style="color:#c62828">Forget token</a></p>
-    </div>
-
-    <div id="s1" style="display:none">
+    <!-- Step 1: Select Board -->
+    <div id="s1">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <strong style="font-size:15px">Choose a Board</strong>
-        <span id="boardCount" style="font-size:12px;color:var(--brown)"></span>
+        <span id="boardCount" style="font-size:12px;color:#888"></span>
       </div>
-      <input type="text" id="boardSearch" placeholder="🔍 Search boards…" oninput="filterBoards()" />
+      <input type="text" id="boardSearch" placeholder="🔍 Search boards…" oninput="filterBoards()" style="margin-bottom:10px" />
       <div class="board-list" id="boardList"></div>
-      <div class="loading" id="loadingItems" style="display:none">⏳ Fetching all items…</div>
+      <div class="loading" id="loadingItems" style="display:none">⏳ Fetching columns and all items…</div>
     </div>
 
+    <!-- Step 2: Choose Columns + Preview -->
     <div id="s2" style="display:none">
-      <strong style="font-size:15px" id="previewTitle"></strong>
-      <p style="font-size:13px;color:var(--brown);margin:4px 0 12px" id="previewMeta"></p>
+      <div style="margin-bottom:12px">
+        <strong style="font-size:15px" id="previewTitle"></strong>
+        <p style="font-size:13px;color:#666;margin-top:3px" id="previewMeta"></p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Export columns</div>
+            <div class="panel-sub">Created At and Updated At are off by default. Pick exactly what goes into Excel.</div>
+          </div>
+          <div class="toolbar">
+            <button class="btn-secondary btn-sm" onclick="applyRecommendedColumns()">Recommended</button>
+            <button class="btn-secondary btn-sm" onclick="selectAllColumns()">Select all</button>
+            <button class="btn-secondary btn-sm" onclick="clearAllColumns()">Clear all</button>
+          </div>
+        </div>
+        <input type="text" id="columnSearch" placeholder="🔍 Filter columns…" oninput="renderColumnSelector()" style="margin-bottom:12px" />
+        <div class="summary-row">
+          <div class="summary-pill" id="selectedCountPill">0 selected</div>
+          <div class="summary-pill" id="hiddenCountPill">0 hidden</div>
+        </div>
+        <div class="chip-grid" id="columnList"></div>
+      </div>
+
       <div class="table-wrap"><table id="previewTable"></table></div>
       <div class="info" id="exportInfo"></div>
       <div class="actions">
         <button class="btn-back" onclick="goBack()">← Back</button>
-        <button class="btn-yellow" onclick="exportExcel()">⬇ Download Excel File</button>
+        <button class="btn-green" onclick="exportExcel()">⬇ Download Excel File</button>
       </div>
     </div>
 
+    <!-- Step 3: Done -->
     <div id="s3" style="display:none" class="success">
       <div style="font-size:52px;margin-bottom:12px">✅</div>
-      <h2 style="color:#7a5c00;font-size:18px;margin-bottom:8px">Export Complete!</h2>
-      <p style="font-size:14px;margin-bottom:6px" id="doneMsg"></p>
-      <p style="color:var(--brown);font-size:13px;margin-bottom:24px" id="doneFile"></p>
+      <h2 style="color:#00875a;font-size:18px;margin-bottom:8px">Export Complete!</h2>
+      <p style="color:#555;font-size:14px;margin-bottom:6px" id="doneMsg"></p>
+      <p style="color:#888;font-size:13px;margin-bottom:24px" id="doneFile"></p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="btn-primary" onclick="goBack()">Export Another Board</button>
-        <button class="btn-yellow" onclick="exportExcel()">⬇ Download Again</button>
+        <button class="btn-green" onclick="exportExcel()">⬇ Download Again</button>
       </div>
     </div>
   </div>
@@ -116,15 +158,8 @@
 
 <script>
 const PASSWORD = "Finance2026#";
-const API = "https://api.monday.com/v2";
-
 const MONDAY_API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY0Mjc5Nzc4MywiYWFpIjoxMSwidWlkIjo4MjE5MjA1NSwiaWFkIjoiMjAyNi0wNC0wOFQwMDo0MzowMi4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MjA4NDc4NzMsInJnbiI6InVzZTEifQ.mitwi07zu1LjUGam7loaOARdRIbX3BczV3I7wnEAzko";
-let apiKey = localStorage.getItem("monday_api_key") || MONDAY_API_KEY;
-let allBoards = [];
-let selectedBoard = null;
-let allItems = [];
-let colMap = {};
-let detectedNumericFormats = {};
+const API = "https://api.monday.com/v2";
 
 const NUMERIC_COLUMN_FORMATS = {
   "Internal Hours": "0.00",
@@ -132,22 +167,17 @@ const NUMERIC_COLUMN_FORMATS = {
   "Item ID": "0"
 };
 
-const DATE_COLUMNS = [];
+let apiKey = MONDAY_API_KEY;
+let allBoards = [], selectedBoard = null, allItems = [], allColumns = [];
+let exportColumnDefs = [], selectedColumnIds = new Set();
+let colMap = {}, detectedNumericFormats = {};
 
-document.getElementById("pwInput").addEventListener("keydown", e => {
-  if (e.key === "Enter") checkPw();
-});
-
-document.getElementById("apiKeyInput").addEventListener("keydown", e => {
-  if (e.key === "Enter") connectMonday();
-});
+document.getElementById("pwInput").addEventListener("keydown", e => { if (e.key === "Enter") checkPw(); });
 
 function checkPw() {
   if (document.getElementById("pwInput").value === PASSWORD) {
     document.getElementById("pw-screen").style.display = "none";
-    document.getElementById("app").style.display = "block";
-
-    apiKey = localStorage.getItem("monday_api_key") || MONDAY_API_KEY;
+    document.getElementById("app").style.display = "flex";
     connectMonday();
   } else {
     document.getElementById("pwError").style.display = "";
@@ -155,13 +185,16 @@ function checkPw() {
 }
 
 function setStep(n) {
-  [0,1,2,3].forEach(i => {
-    document.getElementById("s" + i).style.display = i === n ? "" : "none";
+  ["s1","s2","s3"].forEach((id, i) => {
+    document.getElementById(id).style.display = (i + 1) === n ? "" : "none";
+  });
+  [1, 2, 3].forEach(i => {
     const dot = document.getElementById("dot" + i);
     const lbl = document.getElementById("lbl" + i);
+    if (!dot) return;
     dot.className = "step-dot " + (i < n ? "step-done" : i === n ? "step-active" : "step-idle");
-    dot.textContent = i < n ? "✓" : i + 1;
-    lbl.className = "step-label" + (i === n ? " active" : "");
+    dot.textContent = i < n ? "✓" : i;
+    lbl.className = "step-label" + (i === n ? " active" : i < n ? " done" : "");
   });
 }
 
@@ -174,57 +207,23 @@ function showError(msg) {
 async function gql(query) {
   const res = await fetch(API, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": apiKey,
-      "API-Version": "2023-10"
-    },
+    headers: { "Content-Type": "application/json", "Authorization": apiKey, "API-Version": "2023-10" },
     body: JSON.stringify({ query })
   });
-
   const data = await res.json();
-
-  if (data.errors && data.errors.length) {
-    throw new Error(data.errors[0].message);
-  }
-
+  if (data.errors && data.errors.length) throw new Error(data.errors[0].message);
   return data.data;
 }
 
 async function connectMonday() {
   showError("");
-
-  const btn = document.getElementById("btnConnect");
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "Connecting…";
-  }
-
-  const inputVal = document.getElementById("apiKeyInput")?.value?.trim();
-  if (inputVal) apiKey = inputVal;
-
-  if (!apiKey) {
-    showError("Please enter your Monday API token.");
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = "Connect →";
-    }
-    return;
-  }
-
   try {
     const data = await gql(`{ boards(limit:100) { id name items_count } }`);
-    localStorage.setItem("monday_api_key", apiKey);
     allBoards = data.boards || [];
     renderBoards(allBoards);
     setStep(1);
-  } catch (e) {
+  } catch(e) {
     showError("Connection failed: " + e.message);
-  }
-
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = "Connect →";
   }
 }
 
@@ -232,10 +231,9 @@ function renderBoards(list) {
   document.getElementById("boardCount").textContent = list.length + " boards";
   document.getElementById("boardList").innerHTML = list.map(b => `
     <div class="board-item" onclick="selectBoard(${b.id})">
-      <span style="font-weight:600;font-size:14px">${escapeHtml(b.name)}</span>
-      <span style="font-size:12px;color:var(--brown)">${b.items_count} items →</span>
-    </div>
-  `).join("") || "<p style='color:#aaa;text-align:center;font-size:13px'>No boards found.</p>";
+      <span class="board-name">${escapeHtml(b.name)}</span>
+      <span class="board-count">${b.items_count} items →</span>
+    </div>`).join("") || "<p style='color:#aaa;font-size:13px;text-align:center'>No boards found.</p>";
 }
 
 function filterBoards() {
@@ -247,27 +245,16 @@ async function selectBoard(id) {
   selectedBoard = allBoards.find(b => b.id == id);
   document.getElementById("loadingItems").style.display = "";
   showError("");
-  allItems = [];
-  colMap = {};
-  detectedNumericFormats = {};
+  allItems = []; allColumns = [];
+  exportColumnDefs = []; selectedColumnIds = new Set();
+  colMap = {}; detectedNumericFormats = {};
 
   try {
-    const colData = await gql(`{
-      boards(ids:[${id}]) {
-        columns {
-          id
-          title
-          type
-        }
-      }
-    }`);
-
-    (colData?.boards?.[0]?.columns || []).forEach(c => {
-      colMap[c.id] = { title: c.title, type: c.type };
-    });
+    const colData = await gql(`{ boards(ids:[${id}]) { columns { id title type } } }`);
+    allColumns = colData?.boards?.[0]?.columns || [];
+    allColumns.forEach(c => { colMap[c.id] = { title: c.title, type: c.type }; });
 
     let cursor = null;
-
     do {
       const ca = cursor ? `, cursor:"${cursor}"` : "";
       const d = await gql(`{
@@ -275,98 +262,85 @@ async function selectBoard(id) {
           items_page(limit:100${ca}) {
             cursor
             items {
-              id
-              name
-              state
-              created_at
-              updated_at
+              id name state created_at updated_at
               group { title }
-              column_values {
-                id
-                type
-                text
-                value
-              }
+              column_values { id type text value }
             }
           }
         }
       }`);
-
       const pg = d?.boards?.[0]?.items_page;
       allItems = [...allItems, ...(pg?.items || [])];
       cursor = pg?.cursor || null;
     } while (cursor);
 
     detectedNumericFormats = detectNumericColumns(allItems);
-
+    initColumnSelection();
     renderPreview();
     setStep(2);
-  } catch (e) {
+  } catch(e) {
     showError("Failed to fetch items: " + e.message);
   }
-
   document.getElementById("loadingItems").style.display = "none";
 }
 
-function getColumnMeta(colId, fallbackType) {
-  const meta = colMap[colId];
-  return {
-    title: meta?.title || colId,
-    type: meta?.type || fallbackType || ""
-  };
-}
+// ── Numeric detection (from GitHub version) ─────────────────────────────────
 
 function parseJsonSafe(value) {
   if (value == null || value === "") return null;
   if (typeof value === "object") return value;
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(value); } catch { return null; }
 }
 
 function normalizeNumber(value) {
   if (value == null) return null;
-
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
+  if (typeof value === "number" && Number.isFinite(value)) return value;
   const str = String(value).trim();
   if (!str) return null;
-
   const isPercent = /%/.test(str);
-
-  const cleaned = str
-    .replace(/\$/g, "")
-    .replace(/,/g, "")
-    .replace(/%/g, "")
-    .replace(/\bhrs?\b/gi, "")
-    .replace(/\bhours?\b/gi, "")
-    .replace(/\s+/g, "");
-
+  const cleaned = str.replace(/\$/g,"").replace(/,/g,"").replace(/%/g,"")
+    .replace(/\bhrs?\b/gi,"").replace(/\bhours?\b/gi,"").replace(/\s+/g,"");
   if (!cleaned || cleaned === "-" || cleaned === ".") return null;
-
   const num = Number(cleaned);
   if (!Number.isFinite(num)) return null;
-
   return isPercent ? num / 100 : num;
 }
 
+function guessNumberFormat(columnName, originalValue) {
+  const str = String(originalValue || "");
+  if (/\$/.test(str) || /cost|amount|budget|price|rate|revenue|spend/i.test(columnName)) return "$#,##0.00";
+  if (/%/.test(str) || /margin|percent|percentage|pct/i.test(columnName)) return "0.00%";
+  if (/hour|hours|hrs/i.test(columnName)) return "0.00";
+  return "0.00";
+}
+
+function detectNumericColumns(items) {
+  const stats = {};
+  items.forEach(item => {
+    (item.column_values || []).forEach(col => {
+      const meta = colMap[col.id];
+      const key = meta?.title || col.id;
+      const rawValue = extractRawMondayValue(col);
+      if (rawValue === "" || rawValue == null) return;
+      if (!stats[key]) stats[key] = { total: 0, numeric: 0, sample: rawValue };
+      stats[key].total += 1;
+      if (normalizeNumber(rawValue) !== null) { stats[key].numeric += 1; stats[key].sample = rawValue; }
+    });
+  });
+  const detected = {};
+  Object.entries(stats).forEach(([key, s]) => {
+    const ratio = s.total ? s.numeric / s.total : 0;
+    if (s.numeric >= 2 && ratio >= 0.8) detected[key] = guessNumberFormat(key, s.sample);
+  });
+  return detected;
+}
+
 function extractRawMondayValue(col) {
-  const meta = getColumnMeta(col.id, col.type);
   const raw = parseJsonSafe(col.value);
-
-  if (col.text != null && String(col.text).trim() !== "") {
-    return col.text;
-  }
-
+  if (col.text != null && String(col.text).trim() !== "") return col.text;
   if (raw == null) return "";
-
   if (typeof raw === "number") return raw;
   if (typeof raw === "string") return raw;
-
   if (raw.number != null) return raw.number;
   if (raw.value != null && typeof raw.value !== "object") return raw.value;
   if (raw.amount != null) return raw.amount;
@@ -374,247 +348,209 @@ function extractRawMondayValue(col) {
   if (raw.hour != null) return raw.hour;
   if (raw.hours != null) return raw.hours;
   if (raw.total != null && typeof raw.total !== "object") return raw.total;
-
-  if (meta.type === "numbers" && raw.number != null) return raw.number;
-
   return "";
-}
-
-function guessNumberFormat(columnName, originalValue) {
-  const str = String(originalValue || "");
-
-  if (/\$/.test(str) || /cost|amount|budget|price|rate|revenue|spend/i.test(columnName)) {
-    return "$#,##0.00";
-  }
-
-  if (/%/.test(str) || /margin|percent|percentage|pct/i.test(columnName)) {
-    return "0.00%";
-  }
-
-  if (/hour|hours|hrs/i.test(columnName)) {
-    return "0.00";
-  }
-
-  return "0.00";
-}
-
-function detectNumericColumns(items) {
-  const stats = {};
-
-  items.forEach(item => {
-    (item.column_values || []).forEach(col => {
-      const meta = getColumnMeta(col.id, col.type);
-      const key = meta.title;
-      const rawValue = extractRawMondayValue(col);
-
-      if (rawValue === "" || rawValue == null) return;
-
-      if (!stats[key]) {
-        stats[key] = { total: 0, numeric: 0, sample: rawValue };
-      }
-
-      stats[key].total += 1;
-
-      const parsed = normalizeNumber(rawValue);
-      if (parsed !== null) {
-        stats[key].numeric += 1;
-        stats[key].sample = rawValue;
-      }
-    });
-  });
-
-  const detected = {};
-
-  Object.entries(stats).forEach(([key, s]) => {
-    const ratio = s.total ? s.numeric / s.total : 0;
-    if (s.numeric >= 2 && ratio >= 0.8) {
-      detected[key] = guessNumberFormat(key, s.sample);
-    }
-  });
-
-  return detected;
 }
 
 function parseCellValue(columnName, rawValue) {
   if (rawValue == null || rawValue === "") return "";
-
-  if (DATE_COLUMNS.includes(columnName)) {
-    const dt = new Date(rawValue);
-    return isNaN(dt.getTime()) ? rawValue : dt;
-  }
-
   const numericFormats = { ...detectedNumericFormats, ...NUMERIC_COLUMN_FORMATS };
   if (Object.prototype.hasOwnProperty.call(numericFormats, columnName)) {
     const num = normalizeNumber(rawValue);
     return num !== null ? num : rawValue;
   }
-
   return rawValue;
 }
 
+// ── Column selection ─────────────────────────────────────────────────────────
+
+function initColumnSelection() {
+  const baseDefs = [
+    { id: "base:item_id",   label: "Item ID",   group: "System", recommended: true,  isNumeric: true,  getter: item => Number(item.id) },
+    { id: "base:item_name", label: "Item Name", group: "System", recommended: true,  isNumeric: false, getter: item => item.name || "" },
+    { id: "base:group",     label: "Group",     group: "System", recommended: true,  isNumeric: false, getter: item => item.group?.title || "" },
+    { id: "base:state",     label: "State",     group: "System", recommended: true,  isNumeric: false, getter: item => item.state || "" },
+    { id: "base:created_at",label: "Created At",group: "System", recommended: false, isNumeric: false, getter: item => item.created_at ? new Date(item.created_at).toLocaleString() : "" },
+    { id: "base:updated_at",label: "Updated At",group: "System", recommended: false, isNumeric: false, getter: item => item.updated_at ? new Date(item.updated_at).toLocaleString() : "" }
+  ];
+
+  const mondayDefs = allColumns.map(col => {
+    const numericFormats = { ...detectedNumericFormats, ...NUMERIC_COLUMN_FORMATS };
+    const isNumeric = Object.prototype.hasOwnProperty.call(numericFormats, col.title);
+    return {
+      id: `col:${col.id}`,
+      label: col.title,
+      group: "Monday columns",
+      recommended: true,
+      isNumeric,
+      numericFormat: numericFormats[col.title] || null,
+      getter: item => {
+        const cv = item.column_values.find(v => v.id === col.id);
+        if (!cv) return "";
+        const raw = extractRawMondayValue(cv);
+        return parseCellValue(col.title, raw);
+      }
+    };
+  });
+
+  exportColumnDefs = [...baseDefs, ...mondayDefs];
+  selectedColumnIds = new Set(exportColumnDefs.filter(col => col.recommended).map(col => col.id));
+}
+
+function getVisibleColumnDefs() {
+  return exportColumnDefs.filter(def => selectedColumnIds.has(def.id));
+}
+
 function buildRows() {
+  const visibleDefs = getVisibleColumnDefs();
   return allItems.map(item => {
     const row = {};
-
-    row["Item ID"] = Number(item.id);
-    row["Item Name"] = item.name || "";
-    row["Group"] = item.group?.title || "";
-    row["State"] = item.state || "";
-
-    (item.column_values || []).forEach(col => {
-      const meta = getColumnMeta(col.id, col.type);
-      const key = meta.title;
-      const rawValue = extractRawMondayValue(col);
-      row[key] = parseCellValue(key, rawValue);
-    });
-
+    visibleDefs.forEach(def => { row[def.label] = def.getter(item); });
     return row;
   });
 }
 
+function renderColumnSelector() {
+  const query = document.getElementById("columnSearch").value.trim().toLowerCase();
+  const list = exportColumnDefs.filter(def =>
+    !query || def.label.toLowerCase().includes(query) || def.group.toLowerCase().includes(query)
+  );
+  document.getElementById("columnList").innerHTML = list.map(def => `
+    <label class="chip">
+      <input type="checkbox" ${selectedColumnIds.has(def.id) ? "checked" : ""} onchange="toggleColumn('${def.id.replace(/'/g, "\\'")}')">
+      <div>
+        <div class="chip-label">${escapeHtml(def.label)}</div>
+        <div class="chip-meta">${def.group}${def.recommended ? " · included by default" : " · optional"}</div>
+      </div>
+    </label>
+  `).join("") || "<p style='color:#aaa;font-size:13px;text-align:center'>No matching columns.</p>";
+
+  document.getElementById("selectedCountPill").textContent = `${selectedColumnIds.size} selected`;
+  document.getElementById("hiddenCountPill").textContent = `${exportColumnDefs.length - selectedColumnIds.size} hidden`;
+}
+
+function toggleColumn(id) {
+  if (selectedColumnIds.has(id)) selectedColumnIds.delete(id);
+  else selectedColumnIds.add(id);
+  renderColumnSelector();
+  renderPreviewTable();
+}
+
+function selectAllColumns() {
+  selectedColumnIds = new Set(exportColumnDefs.map(def => def.id));
+  renderColumnSelector(); renderPreviewTable();
+}
+
+function clearAllColumns() {
+  selectedColumnIds = new Set();
+  renderColumnSelector(); renderPreviewTable();
+}
+
+function applyRecommendedColumns() {
+  selectedColumnIds = new Set(exportColumnDefs.filter(def => def.recommended).map(def => def.id));
+  renderColumnSelector(); renderPreviewTable();
+}
+
+// ── Preview ──────────────────────────────────────────────────────────────────
+
 function renderPreview() {
-  const fullRows = buildRows();
-  const rows = fullRows.slice(0, 6);
-  if (!rows.length) return;
-
-  const allKeys = Object.keys(fullRows[0] || {});
-  const cols = allKeys.slice(0, 8);
-
   document.getElementById("previewTitle").textContent = "Preview: " + selectedBoard.name;
-  document.getElementById("previewMeta").textContent = `${allItems.length} items · showing first 6 rows`;
-  document.getElementById("exportInfo").textContent = `📊 Export will include all ${allItems.length} items with all ${allKeys.length} columns.`;
+  document.getElementById("previewMeta").textContent =
+    `${allItems.length} items · ${allColumns.length} Monday columns available`;
+  renderColumnSelector();
+  renderPreviewTable();
+}
 
-  const displayValue = (val) => {
-    if (val instanceof Date) return val.toLocaleString();
-    if (val === "" || val == null) return "—";
-    return String(val);
-  };
+function renderPreviewTable() {
+  const rows = buildRows().slice(0, 6);
+  const selectedDefs = getVisibleColumnDefs();
+  const cols = selectedDefs.slice(0, 8).map(def => def.label);
+  const totalCols = selectedDefs.length;
 
-  const thead = `<thead><tr>${
-    cols.map(c => `<th>${escapeHtml(c)}</th>`).join("")
-  }<th style="opacity:.5;font-weight:400">+${Math.max(allKeys.length - cols.length, 0)} more</th></tr></thead>`;
+  document.getElementById("exportInfo").textContent = totalCols
+    ? `📊 Export will include ${allItems.length} items with ${totalCols} selected columns, bold headers, auto-filter, and auto-sized column widths.`
+    : "📊 No columns selected yet. Pick at least one column to enable the export.";
 
-  const tbody = `<tbody>${
-    rows.map(r => `<tr>${
-      cols.map(c => `<td>${escapeHtml(displayValue(r[c]))}</td>`).join("")
-    }<td style="color:#ccc">…</td></tr>`).join("")
-  }</tbody>`;
+  if (!rows.length || !totalCols) {
+    document.getElementById("previewTable").innerHTML =
+      `<thead><tr><th>Preview</th></tr></thead><tbody><tr><td>${totalCols ? "No rows found." : "Select at least one column."}</td></tr></tbody>`;
+    return;
+  }
 
+  const extraCol = totalCols > cols.length
+    ? `<th style="color:#aaa;font-weight:400">+${totalCols - cols.length} more</th>` : "";
+  const thead = `<thead><tr>${cols.map(c => `<th>${escapeHtml(c)}</th>`).join("")}${extraCol}</tr></thead>`;
+  const tbody = `<tbody>${rows.map(r =>
+    `<tr>${cols.map(c => `<td>${escapeHtml(String(r[c] ?? "—"))}</td>`).join("")}${totalCols > cols.length ? `<td style="color:#ccc">…</td>` : ""}</tr>`
+  ).join("")}</tbody>`;
   document.getElementById("previewTable").innerHTML = thead + tbody;
 }
 
+// ── Export ───────────────────────────────────────────────────────────────────
+
 function exportExcel() {
   const rows = buildRows();
-
-  if (!rows.length) {
-    alert("No data!");
-    return;
-  }
+  if (!rows.length) { showError("No data to export."); return; }
+  if (!getVisibleColumnDefs().length) { showError("Select at least one column before exporting."); return; }
+  showError("");
 
   try {
     const ws = XLSX.utils.json_to_sheet(rows);
     const keys = Object.keys(rows[0]);
+    const visibleDefs = getVisibleColumnDefs();
     const numericFormats = { ...detectedNumericFormats, ...NUMERIC_COLUMN_FORMATS };
 
+    // Column widths
     ws["!cols"] = keys.map(k => ({
-      wch: Math.min(
-        Math.max(
-          k.length,
-          ...rows.map(r => {
-            const v = r[k];
-            if (v instanceof Date) return v.toLocaleString().length;
-            return String(v ?? "").length;
-          })
-        ) + 2,
-        40
-      )
+      wch: Math.min(Math.max(k.length, ...rows.map(r => String(r[k] ?? "").length)) + 2, 40)
     }));
 
-    ws["!autofilter"] = {
-      ref: XLSX.utils.encode_range({
-        s: { r: 0, c: 0 },
-        e: { r: rows.length, c: keys.length - 1 }
-      })
-    };
+    // Auto-filter
+    ws["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { r:0, c:0 }, e: { r: rows.length, c: keys.length - 1 } }) };
 
-    DATE_COLUMNS.forEach(colName => {
-      const c = keys.indexOf(colName);
+    // Numeric formatting
+    visibleDefs.forEach(def => {
+      if (!def.isNumeric && !numericFormats[def.label]) return;
+      const fmt = def.numericFormat || numericFormats[def.label];
+      if (!fmt) return;
+      const c = keys.indexOf(def.label);
       if (c === -1) return;
-
       for (let r = 1; r <= rows.length; r++) {
         const ref = XLSX.utils.encode_cell({ r, c });
         if (!ws[ref]) continue;
-
-        if (rows[r - 1][colName] instanceof Date) {
-          ws[ref].t = "d";
-          ws[ref].z = "m/d/yyyy h:mm AM/PM";
-        }
-      }
-    });
-
-    Object.entries(numericFormats).forEach(([colName, fmt]) => {
-      const c = keys.indexOf(colName);
-      if (c === -1) return;
-
-      for (let r = 1; r <= rows.length; r++) {
-        const ref = XLSX.utils.encode_cell({ r, c });
-        if (!ws[ref]) continue;
-
-        const value = rows[r - 1][colName];
+        const value = rows[r - 1][def.label];
         if (typeof value === "number" && Number.isFinite(value)) {
-          ws[ref].t = "n";
-          ws[ref].v = value;
-          ws[ref].z = fmt;
+          ws[ref].t = "n"; ws[ref].v = value; ws[ref].z = fmt;
         }
       }
     });
 
     const safeName = (selectedBoard.name || "Monday Export")
-      .replace(/[:\\\/\?\*\[\]]/g, "-")
-      .slice(0, 31);
-
+      .replace(/[:\\\/\?\*\[\]]/g, "-").slice(0, 31);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, safeName);
-
     const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     const blob = new Blob([wbout], { type: "application/octet-stream" });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
-    a.href = url;
-    a.download = safeName + ".xlsx";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    a.href = url; a.download = safeName + ".xlsx";
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
 
-    document.getElementById("doneMsg").textContent = `${allItems.length} items from "${selectedBoard.name}" exported.`;
+    document.getElementById("doneMsg").textContent =
+      `${allItems.length} items from "${selectedBoard.name}" exported with ${keys.length} columns.`;
     document.getElementById("doneFile").innerHTML = `Saved as <code>${escapeHtml(safeName)}.xlsx</code>`;
     setStep(3);
-  } catch (e) {
-    alert("Export error: " + e.message);
+  } catch(e) {
+    showError("Export error: " + e.message);
   }
 }
 
-function goBack() {
-  setStep(1);
-  showError("");
-}
-
-function clearToken() {
-  localStorage.removeItem("monday_api_key");
-  apiKey = "";
-  document.getElementById("apiKeyInput").value = "";
-  alert("Saved token cleared.");
-}
+function goBack() { setStep(1); showError(""); }
 
 function escapeHtml(value) {
   return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 }
 </script>
 </body>
